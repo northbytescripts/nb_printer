@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northbyte · Drukarka</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- ============================================================
+     SYMULACJA GRY – widoczna tylko poza FiveM (klasa .tryb-podglad)
+     ============================================================ -->
+<div class="gra" aria-hidden="true">
+  <div class="gra__scena">
+    <div class="gra__ksztalt gra__lampa"></div>
+    <div class="gra__ksztalt gra__okno"></div>
+    <div class="gra__ksztalt gra__regal"></div>
+    <div class="gra__ksztalt gra__regal2"></div>
+    <div class="gra__ksztalt gra__biurko"></div>
+    <div class="gra__ksztalt gra__drukarka"></div>
+  </div>
+  <div class="gra__winieta"></div>
+  <div class="gra__hud">
+    <span style="--w:82%;--c:#3fbf7f"></span>
+    <span style="--w:64%;--c:#4aa3f5"></span>
+  </div>
+</div>
+
+<!-- Podpowiedź interakcji (w FiveM zwykle rysowana przez Lua / ox_lib) -->
+<button class="podpowiedz schowana" id="podpowiedz" type="button">
+  <span class="klawisz">E</span>
+  <span><span data-t="prompt"></span><small data-t="prompt_pod"></small></span>
+</button>
+
+<!-- ============================================================
+     NUI – nakładka z panelem drukarki
+     ============================================================ -->
+<div class="nakladka" id="nakladka">
+  <div class="panel" role="dialog" aria-modal="true">
+
+    <!-- Górny pasek: marka, okruszki, gracz, zamknij -->
+    <header class="pasek">
+      <div class="marka">
+        <div class="marka__logo" data-logo="34"></div>
+        <div>
+          <div class="marka__nazwa" id="markaNazwa">Northbyte</div>
+          <div class="marka__pod" data-t="marka_pod"></div>
+        </div>
+      </div>
+      <div class="pasek__sep"></div>
+      <nav class="okruszki" id="okruszki"></nav>
+      <div class="pasek__prawo">
+        <div class="gracz"><span class="gracz__awatar" id="graczInicjaly">JK</span><span id="graczImie">Jan Kowalski</span></div>
+        <div class="esc-wskazowka"><span class="kbd">ESC</span><span id="escOpis" data-t="esc_zamknij"></span></div>
+        <button class="przycisk-ikona" id="btnZamknij" type="button" data-ikona="zamknij" data-t-title="zamknij"></button>
+      </div>
+    </header>
+
+    <main class="tresc">
+
+      <!-- ===== EKRAN 1: MENU GŁÓWNE ===== -->
+      <section class="ekran" data-ekran="menu">
+        <div class="naglowek-ekranu">
+          <div class="etykieta-sekcji st" data-t="menu_etykieta"></div>
+          <h1 class="st" data-t="menu_tytul"></h1>
+          <p class="st" data-t="menu_opis"></p>
+        </div>
+        <div class="karty" id="karty"><!-- generowane z Config.Tryby --></div>
+        <div class="stopka-menu st">
+          <span class="kropka"></span>
+          <span class="info"><b data-t="gotowa"></b></span>
+          <span class="info"><span data-t="papier"></span> <b id="papierIlosc">—</b></span>
+          <span class="info"><span data-t="toner"></span> <span class="pasek-poziomu"><i id="tonerPasek"></i></span> <b id="tonerIlosc">—</b></span>
+          <span class="prawo"><span class="logo-mini" data-logo="16"></span><span data-t="menu_stopka"></span></span>
+        </div>
+      </section>
+
+      <!-- ===== EKRAN 2: WYBÓR SZABLONU ===== -->
+      <section class="ekran" data-ekran="szablony">
+        <div class="naglowek-ekranu">
+          <div class="etykieta-sekcji st" data-t="krok1"></div>
+          <h1 class="st" data-t="szablony_tytul"></h1>
+          <p class="st" data-t="szablony_opis"></p>
+        </div>
+        <div class="szablony" id="szablony"><!-- generowane z Config.Szablony --></div>
+        <div class="pasek-akcji st">
+          <button class="btn btn--jasny" type="button" data-akcja="wstecz"><span data-ikona="wstecz"></span><span data-t="wstecz"></span></button>
+          <span class="podpowiedz-tekst"><span data-ikona="info"></span><span data-t="szablony_hint"></span></span>
+        </div>
+      </section>
+
+      <!-- ===== EKRAN 3: EDYTOR ===== -->
+      <section class="ekran" data-ekran="edytor">
+        <div class="edytor">
+          <!-- LEWO: podgląd dokumentu -->
+          <div class="podglad" id="podglad">
+            <span class="podglad__znacznik"><i></i><span data-t="podglad_live"></span></span>
+            <!-- Pasek narzędzi – działa na zaznaczonym zdjęciu -->
+            <div class="pasek-foto" id="pasekFoto">
+              <img id="pasekFotoMini" alt="">
+              <span class="pasek-foto__nazwa" id="pasekFotoNazwa"></span>
+              <span class="pasek-foto__sep"></span>
+              <button type="button" data-foto="obrotL" data-ikona="obrotL" data-rozmiar="16" data-t-title="nar_obrotL"></button>
+              <button type="button" data-foto="obrotP" data-ikona="obrotP" data-rozmiar="16" data-t-title="nar_obrotP"></button>
+              <button type="button" data-foto="prosto" data-ikona="poziom" data-rozmiar="16" data-t-title="nar_prosto"></button>
+              <span class="pasek-foto__sep"></span>
+              <button type="button" data-foto="mniej" data-ikona="minus" data-rozmiar="16" data-t-title="nar_mniej"></button>
+              <button type="button" data-foto="wiecej" data-ikona="plus" data-rozmiar="16" data-t-title="nar_wiecej"></button>
+              <span class="pasek-foto__sep"></span>
+              <button type="button" data-foto="usun" class="niebezp" data-ikona="kosz" data-rozmiar="16" data-t-title="usun"></button>
+            </div>
+            <span class="podglad__szablon"><span id="chipIkona"></span><b id="chipNazwa">—</b></span>
+            <div class="podglad__scena">
+              <div class="kartka-ramka" id="kartkaRamka">
+                <article class="dok" id="dok">
+                  <div class="dok__znak-wodny" id="dokZnak"></div>
+                  <header class="dok__naglowek">
+                    <div class="dok__godlo" id="dokGodlo"></div>
+                    <div class="dok__organizacja">
+                      <div class="dok__nazwa" id="dokNazwa"></div>
+                      <div class="dok__pod" id="dokPod"></div>
+                    </div>
+                    <div class="dok__meta"><span data-t="nr_dok"></span><b id="dokNr"></b></div>
+                  </header>
+                  <div class="dok__cialo">
+                    <h2 class="dok__tytul" id="dokTytul"></h2>
+                    <div class="dok__kreska"></div>
+                    <div class="dok__info">
+                      <span><span data-ikona="kalendarz" data-rozmiar="12"></span><span data-t="data"></span> <b id="dokData"></b></span>
+                      <span><span data-ikona="zegar" data-rozmiar="12"></span><span data-t="godzina"></span> <b id="dokGodzina"></b></span>
+                      <span><span data-ikona="pinezka" data-rozmiar="12"></span><b data-t="miejsce"></b></span>
+                    </div>
+                    <div class="dok__tresc" id="dokTresc"></div>
+                    <div class="dok__szkielet" id="dokSzkielet"><i></i><i></i><i></i><i></i></div>
+                    <!-- Podpis – zawsze na samym dole kartki -->
+                    <div class="dok__podpis" id="dokPodpis">
+                      <div>
+                        <div class="podpis__odreczny">
+                          <div class="podpis__tekst" id="podpisTekst"></div>
+                          <svg class="podpis__zawijas" viewBox="0 0 200 22" preserveAspectRatio="none" fill="none"><path d="M4 14 C 40 22, 90 4, 130 12 S 185 16, 196 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                          <span class="podpis__stalowka"></span>
+                        </div>
+                        <div class="podpis__linia"></div>
+                        <div class="podpis__imie" id="podpisImie"></div>
+                        <div class="podpis__data" id="podpisData"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Warstwa zdjęć – swobodnie przesuwane/skalowane/obracane (współrzędne w px kartki 560×792) -->
+                  <div class="dok__warstwa" id="dokWarstwa"></div>
+                </article>
+              </div>
+            </div>
+          </div>
+
+          <!-- PRAWO: formularz -->
+          <div class="formularz">
+            <div class="formularz__przewijany">
+              <div class="formularz__naglowek st">
+                <div class="etykieta-sekcji" data-t="krok2"></div>
+                <h2 data-t="edytor_tytul"></h2>
+              </div>
+
+              <div class="pole st">
+                <div class="pole__gora">
+                  <label class="pole__etykieta" for="inTytul" data-t="tytul"></label>
+                  <span class="licznik" id="licznikTytul"></span>
+                </div>
+                <div class="wejscie">
+                  <span data-ikona="tytul" data-rozmiar="17"></span>
+                  <input id="inTytul" type="text" autocomplete="off" spellcheck="false">
+                </div>
+              </div>
+
+              <div class="pole st">
+                <div class="pole__gora">
+                  <span class="pole__etykieta" data-t="tresc"></span>
+                  <span class="licznik" id="licznikTresc"></span>
+                </div>
+                <div class="wejscie wejscie--rt">
+                  <!-- Pasek formatowania (B / I / U / kolor / wyczyść) -->
+                  <div class="rt-pasek" id="rtPasek">
+                    <button type="button" class="rt-btn" data-rt="bold" data-t-title="rt_b"><b>B</b></button>
+                    <button type="button" class="rt-btn" data-rt="italic" data-t-title="rt_i"><i style="font-family:Georgia,serif">I</i></button>
+                    <button type="button" class="rt-btn" data-rt="underline" data-t-title="rt_u"><u>U</u></button>
+                    <span class="rt-sep"></span>
+                    <div class="rt-kolor">
+                      <button type="button" class="rt-btn rt-btn--kolor" id="rtKolorBtn" data-t-title="rt_kolor">
+                        <span class="rt-a">A<i id="rtKolorPasek"></i></span><span data-ikona="dol" data-rozmiar="12"></span>
+                      </button>
+                      <div class="rt-paleta" id="rtPaleta"><!-- próbki z Config.KoloryTekstu --></div>
+                    </div>
+                    <span class="rt-sep"></span>
+                    <button type="button" class="rt-btn" data-rt="removeFormat" data-t-title="rt_wyczysc"><span data-ikona="gumka" data-rozmiar="15"></span></button>
+                  </div>
+                  <div class="rt-pole" id="inTresc" contenteditable="true" spellcheck="false" role="textbox" aria-multiline="true"></div>
+                  <div class="pasek-tresci"><i id="pasekTresci"></i></div>
+                </div>
+              </div>
+
+              <button class="przelacznik-karta st" id="btnPodpis" type="button" role="switch" aria-checked="false">
+                <span class="przelacznik-karta__ikona" data-ikona="podpis" data-rozmiar="20"></span>
+                <span class="przelacznik-karta__tekst"><b data-t="podpis"></b><span id="podpisOpis"></span></span>
+                <span class="przelacznik"></span>
+              </button>
+
+              <div class="pole st">
+                <div class="pole__gora">
+                  <label class="pole__etykieta" for="inZdjecie"><span data-t="zdjecia"></span> <em data-t="opcjonalne"></em></label>
+                  <span class="licznik" id="licznikZdjec"></span>
+                </div>
+                <div class="wiersz">
+                  <div class="wejscie" id="wejscieZdjecie">
+                    <span data-ikona="link" data-rozmiar="17"></span>
+                    <input id="inZdjecie" type="url" autocomplete="off" spellcheck="false" placeholder="https://…/zdjecie.png">
+                  </div>
+                  <button class="btn btn--miekki" id="btnDodajZdjecie" type="button" style="height:44px"><span data-ikona="plus" data-rozmiar="16"></span><span data-t="dodaj"></span></button>
+                </div>
+                <div id="bladZdjecia"></div>
+                <div class="pod-polem">
+                  <span id="zdjeciaPodpowiedz"></span>
+                  <button class="link-btn" id="btnPrzykladowe" type="button"><span data-ikona="iskry" data-rozmiar="14"></span><span data-t="przykladowe"></span></button>
+                </div>
+                <!-- Lista dołączonych zdjęć (miniatury) -->
+                <div class="lista-zdjec" id="listaZdjec"></div>
+              </div>
+            </div>
+
+            <div class="formularz__stopka">
+              <button class="btn btn--jasny" type="button" data-akcja="wstecz"><span data-ikona="wstecz"></span><span data-t="wstecz"></span></button>
+              <button class="btn btn--glowny btn--duzy" id="btnDrukuj" type="button" disabled><span data-ikona="drukarka" data-rozmiar="18"></span><span data-t="drukuj"></span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== EKRAN 4: DRUKOWANIE ===== -->
+      <section class="ekran" data-ekran="druk">
+        <div class="druk" id="druk">
+          <div class="drukarka-il st" id="drukarkaIl">
+            <div class="di-podajnik"></div>
+            <div class="di-korpus">
+              <div class="di-ekran"><i></i><i></i><i></i></div>
+              <div class="di-led"><i></i><i></i></div>
+              <div class="di-przyciski"><i></i><i></i><i></i></div>
+            </div>
+            <div class="di-szczelina"></div>
+            <div class="di-wyjscie">
+              <div class="di-kartka"><div class="pas"></div><i></i><i></i><i></i><i></i><i></i><i></i><b class="foto" id="diFoto"></b><div class="sig" id="diSig"></div><span class="znak-kopii">KOPIA</span></div>
+              <div class="di-zdjecie" id="diZdjecie"><div class="obraz" id="diZdjecieObraz"></div><div class="napis" id="diZdjecieNapis"></div></div>
+            </div>
+            <div class="di-tacka"></div>
+            <div class="di-sukces"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+          </div>
+          <div class="druk__tekst st">
+            <h2 id="drukTytul"></h2>
+            <p><span id="drukEtykieta" data-t="druk_dokument"></span> <b id="drukNazwa"></b><span class="druk__kopie ukryty" id="drukKopie"></span></p>
+          </div>
+          <div class="postep st">
+            <div class="postep__tor"><div class="postep__pasek" id="postepPasek"></div></div>
+            <div class="postep__info"><span id="postepStatus"></span><b id="postepProcent">0%</b></div>
+          </div>
+          <div class="druk__uwaga st"><span data-ikona="info" data-rozmiar="14"></span><span data-t="druk_hint"></span></div>
+        </div>
+      </section>
+
+      <!-- ===== EKRAN 5: KOPIUJ – dokumenty z ekwipunku ===== -->
+      <section class="ekran" data-ekran="kopiuj">
+        <div class="kopiuj" id="kopiuj">
+          <!-- LEWO: wyszukiwarka, filtry, lista, opcje -->
+          <div class="kp-lewo">
+            <div class="kp-gora">
+              <div class="etykieta-sekcji st" data-t="kp_etykieta"></div>
+              <div class="kp-tytul st"><h2 data-t="kp_tytul"></h2><span class="kp-ile" id="kpIle">0</span></div>
+              <div class="wejscie kp-szukaj st" id="kpSzukajPole">
+                <span data-ikona="lupa" data-rozmiar="17"></span>
+                <input id="kpSzukaj" type="search" autocomplete="off" spellcheck="false">
+                <button class="wyczysc" id="kpWyczysc" type="button" data-ikona="zamknij" data-rozmiar="14" data-t-title="kp_wyczysc"></button>
+              </div>
+              <div class="kp-filtry st" id="kpFiltry"><!-- chipy szablonów --></div>
+            </div>
+            <div class="kp-lista st" id="kpLista"></div>
+            <div class="kp-opcje st">
+              <div class="kp-kafel">
+                <div class="kp-kafel__etykieta"><span data-t="kp_kopie"></span><small id="kpKopieMax"></small></div>
+                <div class="stepper" id="kpStepper">
+                  <button type="button" data-krok="-1" data-ikona="minus" data-rozmiar="15" data-t-title="mniej"></button>
+                  <output id="kpKopie">1</output>
+                  <button type="button" data-krok="1" data-ikona="plus" data-rozmiar="15" data-t-title="wiecej"></button>
+                </div>
+              </div>
+              <button class="kp-kafel kp-kafel--przel" id="kpZnak" type="button" role="switch" aria-checked="true">
+                <span class="kp-kafel__etykieta"><span data-t="kp_znak"></span></span>
+                <span class="kp-kafel__wiersz"><span class="znak" data-t-html="kp_znak_opis"></span><span class="mini-przelacznik"></span></span>
+              </button>
+            </div>
+            <div class="formularz__stopka">
+              <button class="btn btn--jasny" type="button" data-akcja="wstecz"><span data-ikona="wstecz"></span><span data-t="wstecz"></span></button>
+              <button class="btn btn--glowny btn--duzy" id="btnKopiuj" type="button" disabled><span data-ikona="kopiuj" data-rozmiar="18"></span><span data-t="kp_kopiuj"></span><span class="licznik-kopii" id="btnKopiujIle">×1</span></button>
+            </div>
+          </div>
+
+          <!-- PRAWO: podgląd wybranego dokumentu (tylko do odczytu) -->
+          <div class="podglad kp-podglad" id="kpPodglad">
+            <span class="podglad__znacznik"><span data-ikona="klodka" data-rozmiar="12"></span><span data-t="kp_podglad"></span></span>
+            <span class="podglad__szablon" id="kpChip"><span id="kpChipIkona"></span><b id="kpChipNazwa">—</b></span>
+            <div class="podglad__scena">
+              <div class="kartka-ramka" id="kpRamka">
+                <div class="kp-stos s2" id="kpStos2"></div>
+                <div class="kp-stos s1" id="kpStos1"></div>
+                <div id="kpDok"><!-- dokument renderowany z danych --></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pusty stan – brak dokumentów w ekwipunku -->
+          <div class="kp-pusto">
+            <div>
+              <div class="kp-pusto__il st">
+                <div class="teczka-tyl"></div>
+                <div class="arkusz"><i></i><i></i><i></i></div>
+                <div class="arkusz a2"><i></i><i></i><i></i></div>
+                <div class="teczka-przod"><span data-ikona="lupa" data-rozmiar="22"></span></div>
+                <i class="iskra" style="left:14px;top:40px"></i><i class="iskra" style="right:10px;top:22px;animation-delay:-.8s"></i><i class="iskra" style="right:26px;bottom:6px;width:6px;height:6px;animation-delay:-1.6s"></i>
+              </div>
+              <h2 class="st" data-t="kp_pusto"></h2>
+              <p class="st" data-t="kp_pusto_opis"></p>
+              <div class="kp-pusto__akcje st">
+                <button class="btn btn--jasny" type="button" data-akcja="wstecz"><span data-ikona="wstecz"></span><span data-t="wstecz"></span></button>
+                <button class="btn btn--glowny" type="button" id="btnPustoStworz"><span data-ikona="stworz" data-rozmiar="18"></span><span data-t="kp_pusto_stworz"></span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== EKRAN 6: ZDJĘCIE – druk fotografii ===== -->
+      <section class="ekran" data-ekran="zdjecie">
+        <div class="edytor">
+          <!-- LEWO: odbitka z kadrowaniem -->
+          <div class="podglad zd-podglad" id="zdPodglad">
+            <span class="podglad__znacznik"><i></i><span data-t="zd_podglad"></span></span>
+            <span class="podglad__szablon"><span style="background:var(--akcent)"><i data-ikona="aparat" data-rozmiar="11" style="display:grid"></i></span><b id="zdChip">—</b></span>
+            <div class="zd-stol">
+              <div class="zd-odbitka st" id="zdOdbitka">
+                <div class="zd-okno" id="zdOkno">
+                  <img id="zdImg" alt="" draggable="false" referrerpolicy="no-referrer">
+                  <div class="zd-siatka"></div>
+                  <div class="zd-pusto"><span data-ikona="aparat" data-rozmiar="26"></span><span data-t="zd_pusto"></span></div>
+                </div>
+                <div class="zd-podpis puste" id="zdPodpisNaZdjeciu"></div>
+              </div>
+            </div>
+            <div class="zd-narzedzia nieaktywne st" id="zdNarzedzia">
+              <button type="button" data-zoom="-1" data-ikona="minus" data-rozmiar="16" data-t-title="nar_mniej"></button>
+              <input type="range" id="zdZoom" min="100" max="400" step="1" value="100" aria-label="Zoom">
+              <button type="button" data-zoom="1" data-ikona="plus" data-rozmiar="16" data-t-title="nar_wiecej"></button>
+              <span class="wartosc" id="zdZoomWartosc">100%</span>
+              <span class="sep"></span>
+              <button type="button" id="zdReset" data-ikona="kadr" data-rozmiar="16" data-t-title="zd_reset"></button>
+              <span class="sep"></span>
+              <span class="wsk"><span data-ikona="dlon" data-rozmiar="14"></span><span data-t="zd_wskazowka"></span></span>
+            </div>
+          </div>
+
+          <!-- PRAWO: ustawienia -->
+          <div class="formularz">
+            <div class="formularz__przewijany">
+              <div class="formularz__naglowek st">
+                <div class="etykieta-sekcji" data-t="zd_etykieta"></div>
+                <h2 data-t="zd_tytul"></h2>
+              </div>
+
+              <div class="pole st">
+                <div class="pole__gora"><label class="pole__etykieta" for="zdUrl" data-t="zd_url"></label></div>
+                <div class="wiersz">
+                  <div class="wejscie" id="zdUrlPole">
+                    <span data-ikona="link" data-rozmiar="17"></span>
+                    <input id="zdUrl" type="text" autocomplete="off" spellcheck="false" placeholder="https://…/zdjecie.jpg">
+                  </div>
+                  <button class="btn btn--miekki" id="zdWklej" type="button" style="height:44px"><span data-ikona="link" data-rozmiar="16"></span><span data-t="zd_wklej"></span></button>
+                  <button class="btn btn--miekki" id="zdWczytaj" type="button" style="height:44px"><span data-ikona="pobierz" data-rozmiar="16"></span><span data-t="zd_wczytaj"></span></button>
+                </div>
+                <div id="zdBlad"></div>
+                <div class="pod-polem">
+                  <span data-t="formaty"></span>
+                  <button class="link-btn" id="zdPrzykladowe" type="button"><span data-ikona="iskry" data-rozmiar="14"></span><span data-t="przykladowe"></span></button>
+                </div>
+              </div>
+
+              <div class="pole st">
+                <div class="pole__gora"><span class="pole__etykieta" data-t="zd_format"></span><span class="licznik" id="zdFormatOpis"></span></div>
+                <div class="segmenty" id="zdFormaty" role="radiogroup"><span class="segmenty__tlo"></span><!-- z Config.DrukZdjec.formaty --></div>
+              </div>
+
+              <div class="pole st">
+                <div class="pole__gora">
+                  <label class="pole__etykieta" for="zdPodpis"><span data-t="zd_podpis"></span> <em data-t="opcjonalne"></em></label>
+                  <span class="licznik" id="zdPodpisLicznik"></span>
+                </div>
+                <div class="wejscie">
+                  <span data-ikona="pioro" data-rozmiar="17"></span>
+                  <input id="zdPodpis" type="text" autocomplete="off" spellcheck="false">
+                </div>
+              </div>
+
+              <div class="pole pole--wiersz st">
+                <span class="pole__etykieta"><span data-t="zd_kopie"></span><small id="zdKopieOpis"></small></span>
+                <div class="stepper" id="zdStepper">
+                  <button type="button" data-krok="-1" data-ikona="minus" data-rozmiar="15" data-t-title="mniej"></button>
+                  <output id="zdKopie">1</output>
+                  <button type="button" data-krok="1" data-ikona="plus" data-rozmiar="15" data-t-title="wiecej"></button>
+                </div>
+              </div>
+            </div>
+            <div class="formularz__stopka">
+              <button class="btn btn--jasny" type="button" data-akcja="wstecz"><span data-ikona="wstecz"></span><span data-t="wstecz"></span></button>
+              <button class="btn btn--glowny btn--duzy" id="btnDrukujZdjecie" type="button" disabled><span data-ikona="drukarka" data-rozmiar="18"></span><span data-t="zd_drukuj"></span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="ekran" data-ekran="czytanie">
+        <div class="podglad kp-podglad" id="czytanieWidok">
+          <span class="podglad__znacznik"><span data-ikona="klodka" data-rozmiar="12"></span><span data-t="kp_podglad"></span></span>
+          <span class="podglad__szablon" id="czytanieChip"><span id="czytanieChipIkona"></span><b id="czytanieChipNazwa">—</b></span>
+          <div class="podglad__scena" id="czytanieScena">
+            <div class="kartka-ramka" id="czytanieRamka">
+              <div id="czytanieDok"></div>
+            </div>
+          </div>
+          <div class="zd-stol ukryty" id="czytanieFoto">
+            <div class="zd-odbitka" id="czytanieOdbitka">
+              <div class="zd-okno ma-zdjecie" id="czytanieOkno">
+                <img id="czytanieImg" alt="" draggable="false" referrerpolicy="no-referrer">
+              </div>
+              <div class="zd-podpis puste" id="czytanieNapis"></div>
+            </div>
+          </div>
+          <div class="zoom-podglad" id="czytanieZoom">
+            <button type="button" id="czytanieZoomMniej" data-ikona="minus" data-rozmiar="16"></button>
+            <b id="czytanieZoomWartosc">100%</b>
+            <button type="button" id="czytanieZoomWiecej" data-ikona="plus" data-rozmiar="16"></button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Powiadomienie -->
+<div class="toast" id="toast">
+  <div class="toast__ikona" data-ikona="check" data-rozmiar="22"></div>
+  <div class="toast__tekst"><b id="toastTytul"></b><span><span data-ikona="skrzynka" data-rozmiar="13"></span><span id="toastOpis"></span></span></div>
+  <div class="toast__czas"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
