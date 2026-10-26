@@ -237,11 +237,6 @@ The bridge (`bridge/`) handles the character name, job and grade, money and admi
 Questions, bug reports and suggestions are welcome on Discord: **https://discord.gg/cvBmHzVqEJ**.
 You can also open an issue on GitHub. Include your framework, your ox_* versions and any F8 or server console errors.
 
-## License
-
-> **TODO (choose before publishing):** pick one of these options and replace this block:
-> - **GPL-3.0**: open source. Others can modify and redistribute it, but derivatives must stay open under the same license.
-> - **Custom "free, no resale" terms**, for example: *"Free to use and modify on your own server. Do not sell, re-upload or redistribute this resource, or modified versions of it, without permission from Northbyte. Keep the credits."* This is not an OSI open-source license, so do not call it "open source".
 
 ## Credits
 
