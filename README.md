@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/banner.png" alt="nb_printer – Document Printer by Northbyte" width="100%">
+  <img src="nb_printer/images/banner.png" alt="nb_printer – Document Printer by Northbyte" width="100%">
 </p>
 
 <h1 align="center">nb_printer – Document Printer</h1>
@@ -31,9 +31,9 @@ Every result is an inventory item with metadata. Using it opens a read-only prev
 
 | Templates | Editor with live preview |
 | --- | --- |
-| ![Templates](images/templates.png) | ![Create](images/create.png) |
+| ![Templates](nb_printer/images/templates.png) | ![Create](nb_printer/images/create.png) |
 | **Copy from inventory** | **Photo print** |
-| ![Copy](images/copy.png) | ![Photo](images/photo.png) |
+| ![Copy](nb_printer/images/copy.png) | ![Photo](nb_printer/images/photo.png) |
 
 ## Features
 
